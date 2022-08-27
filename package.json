@@ -9,6 +9,10 @@
 		"start": "node dist/index.js",
 		"heroku-postbuild": "tsc --project ./ & cd client/ && npm install && npm install --only=dev --no-shrinkwrap && npm run build"
 	},
+	"cacheDirectories": [
+		"node_modules",
+		"client/node_modules"
+	],
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/Jioyi/vrm-customizer.git"

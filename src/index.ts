@@ -18,7 +18,7 @@ app.use(
 		origin: '*',
 	})
 );
-
+/*
 app.use((req, res, next) => {
 	res.header('Access-Control-Allow-Origin', '*');
 	res.header('Access-Control-Allow-Credentials', 'true');
@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 	res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
 	res.header('Content-Security-Policy', "default-src 'self'");
 	next();
-});
+});*/
 //////////////// ENDS CORS CONFIG ///////////////////////
 
 app.use(express.static(path.resolve(__dirname, '../client/dist')));
@@ -45,7 +45,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-	console.error(
-		`Node cluster worker ${process.pid}: listening on port ${PORT}`
-	);
+	console.log(`Node cluster worker ${process.pid}: listening on port ${PORT}`);
 });
