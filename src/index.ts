@@ -40,11 +40,11 @@ app.get('/api/', (req, res) => {
 });
 
 // All remaining requests return the React app, so it can handle routing.
-app.get('*', function (req, res) {
+app.get('*', (req, res) => {
 	res.sendFile(path.resolve(__dirname, '../client/dist', 'index.html'));
 });
 
-app.listen(PORT, function () {
+app.listen(PORT, () => {
 	console.error(
 		`Node cluster worker ${process.pid}: listening on port ${PORT}`
 	);
