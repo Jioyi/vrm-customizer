@@ -7,18 +7,30 @@ import bodyParser from 'body-parser';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Priority serve any static files.
-app.use(express.static(path.resolve(__dirname, '../client/dist')));
-
 app.use(bodyParser.urlencoded({ extended: true, limit: '8mb' }));
 app.use(bodyParser.json({ limit: '8mb' }));
 app.use(morgan('dev'));
 app.use(express.json());
+
+/*********** CORS CONFIG **********************/
 app.use(
 	cors({
 		origin: '*',
 	})
 );
+app.use((req, res, next) => {
+	res.header('Access-Control-Allow-Origin', '*');
+	res.header('Access-Control-Allow-Credentials', 'true');
+	res.header(
+		'Access-Control-Allow-Headers',
+		'Origin, X-Requested-With, Content-Type, Accept'
+	);
+	res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+	next();
+});
+//////////////// ENDS CORS CONFIG ///////////////////////
+
+app.use(express.static(path.resolve(__dirname, '../client/dist')));
 
 // Answer API requests.
 app.get('/api/', (req, res) => {
