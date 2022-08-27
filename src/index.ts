@@ -18,7 +18,7 @@ app.use(
 		origin: '*',
 	})
 );
-/*
+
 app.use((req, res, next) => {
 	res.header('Access-Control-Allow-Origin', '*');
 	res.header('Access-Control-Allow-Credentials', 'true');
@@ -27,12 +27,11 @@ app.use((req, res, next) => {
 		'Origin, X-Requested-With, Content-Type, Accept'
 	);
 	res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-	res.header('Content-Security-Policy', "default-src 'self'");
 	next();
-});*/
+});
 //////////////// ENDS CORS CONFIG ///////////////////////
 
-app.use(express.static(path.resolve(__dirname, '../client/dist')));
+app.use(express.static(path.resolve(__dirname, '../client/build')));
 
 // Answer API requests.
 app.get('/api/', (req, res) => {
@@ -41,7 +40,7 @@ app.get('/api/', (req, res) => {
 
 // All remaining requests return the React app, so it can handle routing.
 app.get('*', (req, res) => {
-	res.sendFile(path.resolve(__dirname, '../client/dist', 'index.html'));
+	res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
 });
 
 app.listen(PORT, () => {
