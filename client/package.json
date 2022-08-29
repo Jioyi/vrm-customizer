@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.10.0",
+    "@emotion/styled": "^11.10.0",
     "@mediapipe/camera_utils": "^0.3.1640029074",
     "@mediapipe/drawing_utils": "^0.3.1620248257",
     "@mediapipe/holistic": "^0.5.1635989137",
+    "@mui/icons-material": "^5.10.2",
+    "@mui/material": "^5.10.2",
     "@pixiv/three-vrm": "^0.6.11",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.3.0",
@@ -16,6 +20,7 @@
     "@types/react-dom": "^18.0.6",
     "kalidokit": "^1.1.5",
     "react": "^18.2.0",
+    "react-color": "^2.19.3",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
@@ -24,6 +29,7 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "@types/react-color": "^3.0.6",
     "@types/three": "^0.137.0"
   },
   "scripts": {

@@ -104,13 +104,13 @@ const animateVRM = (vrm: VRM, results: Results, videoEl: HTMLVideoElement) => {
     if (riggedFace) rigFace(riggedFace);
 
     if (riggedPose) {
-        rigRotation('Hips', riggedPose.Hips.rotation, 0.7);
+        // rigRotation('Hips', riggedPose.Hips.rotation, 0.7);
         if (riggedPose.Hips.worldPosition) {
             rigPosition(
                 'Hips',
                 {
                     x: -riggedPose.Hips.worldPosition.x, // Reverse direction
-                    y: riggedPose.Hips.worldPosition.y + 1, // Add a bit of height
+                    y: riggedPose.Hips.worldPosition.y + 0.88, // Add a bit of height
                     z: -riggedPose.Hips.worldPosition.z // Reverse direction
                 },
                 1,

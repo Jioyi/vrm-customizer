@@ -7,6 +7,11 @@ import { Camera } from '@mediapipe/camera_utils';
 import { drawResults } from './utils';
 import animateVRM from './animateVRM';
 
+const defaultValue = {
+    hairColor: '#4f2b0d',
+    skintone: '#eaeaea'
+};
+
 export default class VRMCustomizer {
     public canvas: HTMLCanvasElement;
     public cameraCanvas: HTMLCanvasElement;
@@ -43,6 +48,7 @@ export default class VRMCustomizer {
     private buildRender = () => {
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
+            alpha: true,
             antialias: true
         });
         this.renderer.domElement.id = 'VRMCustomizerCanvas';
@@ -53,6 +59,7 @@ export default class VRMCustomizer {
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setClearColor('#000000');
         window.addEventListener('resize', this.onWindowResize, false);
     };
 
@@ -74,12 +81,14 @@ export default class VRMCustomizer {
         this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement);
         this.orbitControls.screenSpacePanning = true;
         this.orbitControls.target.set(0.0, 1.4, 0.0);
+        this.orbitControls.minDistance = 0.5;
+        this.orbitControls.maxDistance = 10;
         this.orbitControls.update();
     };
 
     private buildLights = () => {
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-        directionalLight.position.set(5, 10, 5);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+        directionalLight.position.set(5, 10, 5).normalize();
         directionalLight.target.position.set(0, 0, 0);
         directionalLight.castShadow = true;
         directionalLight.shadow.bias = -0.001;
@@ -128,15 +137,20 @@ export default class VRMCustomizer {
         const loader = new GLTFLoader();
         loader.crossOrigin = 'anonymous';
 
-        const gltf = await loader.loadAsync('./models/A.vrm');
+        const gltf = await loader.loadAsync('./models/violet2.vrm');
         VRMUtils.removeUnnecessaryJoints(gltf.scene);
         const vrm = await VRM.from(gltf);
         this.scene.add(vrm.scene);
         this.currentVrm = vrm;
         this.currentVrm.scene.rotation.y = Math.PI;
+        this.setHairColor(defaultValue.hairColor);
+        this.setSkintone(defaultValue.skintone);
     };
 
     public startCameraRender = async (): Promise<void> => {
+        if (this.cameraContext) {
+            return;
+        }
         this.cameraContext = this.cameraCanvas.getContext('2d');
 
         const config: Holistic.HolisticConfig = {
@@ -175,4 +189,44 @@ export default class VRMCustomizer {
 
         await this.cameraHolistic.start();
     };
+
+    public setBackgroundColor(color: string) {
+        this.renderer.setClearColor(color);
+    }
+
+    public setHairColor(color: string) {
+        this.scene.traverse(async (child: any) => {
+            if (child.material instanceof Array) {
+                child.material.forEach((mat: any) => {
+                    if (mat.name.includes('MAT_HAIR')) {
+                        mat.uniforms.color.value.set(color);
+                        mat.uniforms.shadeColor.value.set(color);
+                        mat.uniformsNeedUpdate = true;
+                    }
+                });
+            }
+        });
+    }
+
+    public setSkintone(color: string) {
+        this.scene.traverse(async (child: any) => {
+            if (child.material instanceof Array) {
+                child.material.forEach((mat: any) => {
+                    if (mat.name.includes('MAT_FACE_SKIN') || mat.name.includes('MAT_BODY_SKIN')) {
+                        mat.uniforms.color.value.set(color);
+                        mat.uniforms.shadeColor.value.set(color);
+                        mat.uniformsNeedUpdate = true;
+                    }
+                });
+            }
+        });
+    }
 }
+
+//mat.color.setHex(0x000000);
+//console.log(mat.uniforms);
+//mat.uniforms.glowColor.value.set( 0x00ff00 );
+//mat.uniforms.diffuse.value.setHex ( 0xFF0000 );
+// mat.uniforms.diffuse.value.setHex(0xff0000);
+// mat.color.set(color);
+// mat.needsUpdate = true;
