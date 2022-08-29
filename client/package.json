@@ -17,6 +17,7 @@
     "@types/jest": "^27.5.2",
     "@types/node": "^16.11.56",
     "@types/react": "^18.0.17",
+    "@types/react-color": "^3.0.4",
     "@types/react-dom": "^18.0.6",
     "kalidokit": "^1.1.5",
     "react": "^18.2.0",
@@ -29,7 +30,6 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
-    "@types/react-color": "^3.0.6",
     "@types/three": "^0.137.0"
   },
   "scripts": {
