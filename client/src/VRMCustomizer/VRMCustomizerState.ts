@@ -8,8 +8,8 @@ export default class VRMCustomizerState {
         this.customizer = new VRMCustomizer(canvas, cameraCanvas, cameraVideo);
     }
 
-    startCameraRender() {
-        this.customizer.startCameraRender();
+    cameraRender(bool: boolean) {
+        this.customizer.cameraRender(bool);
     }
 
     setHairColor(color: ColorResult) {

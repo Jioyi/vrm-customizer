@@ -1,6 +1,5 @@
 import React, { useMemo, useState, createContext, useContext } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { amber, deepOrange, grey } from '@mui/material/colors';
 
 interface ThemeProviderProps {
     children: React.ReactNode;

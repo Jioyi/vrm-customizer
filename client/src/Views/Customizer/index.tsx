@@ -13,12 +13,16 @@ import IconButton from '@mui/material/IconButton';
 // Icons
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
-import ColorizeIcon from '@mui/icons-material/Colorize';
+import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
+import StopCircleIcon from '@mui/icons-material/StopCircle';
+import GitHubIcon from '@mui/icons-material/GitHub';
 // VRMCustomizer
 import VRMCustomizerState from './../../VRMCustomizer/VRMCustomizerState';
 // Components
 import Tooltip from './../../components/Tooltip';
+import WebCamContainer from '../../components/WebCamContainer';
+
 const Customizer = () => {
     const theme = useTheme();
     const colorMode = useThemeContext();
@@ -30,6 +34,8 @@ const Customizer = () => {
     const VRMCustomizer = useMemo(() => {
         return new VRMCustomizerState();
     }, []);
+
+    const [displayCamera, setDisplayCamera] = useState(false);
 
     const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
     const [display, setDisplay] = useState(false);
@@ -82,6 +88,9 @@ const Customizer = () => {
         setColorPicker('skin');
         setDisplay(true);
     };
+    const onClickGitHub = (event: React.MouseEvent<HTMLButtonElement>) => {
+        window.open('https://github.com/Jioyi/vrm-customizer', '_blank');
+    };
 
     const handleChangeColor = useCallback(
         (color: ColorResult) => {
@@ -104,9 +113,10 @@ const Customizer = () => {
         }
     }, [VRMCustomizer, theme.palette.mode]);
 
-    const handlestartCameraRender = useCallback(() => {
-        VRMCustomizer.startCameraRender();
-    }, [VRMCustomizer]);
+    const handleCameraRender = useCallback(() => {
+        setDisplayCamera(!displayCamera);
+        VRMCustomizer.cameraRender(!displayCamera);
+    }, [VRMCustomizer, displayCamera]);
 
     const init = async () => {
         if (sceneCanvasRef.current !== null && cameraCanvasRef.current !== null && cameraVideoRef.current !== null) {
@@ -125,8 +135,6 @@ const Customizer = () => {
 
     return (
         <React.Fragment>
-            <video ref={cameraVideoRef} className={Styles['camera-video']} />
-            <canvas ref={cameraCanvasRef} className={Styles['camera-canvas']} />
             <canvas ref={sceneCanvasRef} className={Styles['scene-canvas']} />
             <Box
                 sx={{
@@ -151,26 +159,35 @@ const Customizer = () => {
                             color="inherit"
                             size="large"
                         >
-                            {theme.palette.mode === 'dark' ? (
-                                <Brightness7Icon sx={{ fontSize: 26 }} />
-                            ) : (
-                                <Brightness4Icon fontSize="inherit" sx={{ fontSize: 26 }} />
-                            )}
+                            {theme.palette.mode === 'dark' ? <Brightness7Icon sx={{ fontSize: 26 }} /> : <Brightness4Icon sx={{ fontSize: 26 }} />}
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Hair Color" placement="top">
                         <IconButton onClick={onClickHairColorPicker} color="inherit" size="large">
-                            <ColorizeIcon sx={{ fontSize: 26 }} />
+                            <FormatColorFillIcon sx={{ fontSize: 26 }} />
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Skintone" placement="top">
                         <IconButton onClick={onClickSkintonePicker} color="inherit" size="large">
-                            <ColorizeIcon sx={{ fontSize: 26 }} />
+                            <FormatColorFillIcon sx={{ fontSize: 26 }} />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="Motion capture" placement="top">
-                        <IconButton onClick={handlestartCameraRender} color="inherit" size="large">
-                            <PlayCircleIcon sx={{ fontSize: 26 }} />
+                    {displayCamera ? (
+                        <Tooltip title="Stop motion capture" placement="top">
+                            <IconButton onClick={handleCameraRender} color="inherit" size="large">
+                                <StopCircleIcon sx={{ fontSize: 26 }} />
+                            </IconButton>
+                        </Tooltip>
+                    ) : (
+                        <Tooltip title="Start motion capture" placement="top">
+                            <IconButton onClick={handleCameraRender} color="inherit" size="large">
+                                <PlayCircleIcon sx={{ fontSize: 26 }} />
+                            </IconButton>
+                        </Tooltip>
+                    )}
+                    <Tooltip title="GitHub" placement="top">
+                        <IconButton onClick={onClickGitHub} color="inherit" size="large">
+                            <GitHubIcon sx={{ fontSize: 26 }} />
                         </IconButton>
                     </Tooltip>
                 </Stack>
@@ -191,6 +208,7 @@ const Customizer = () => {
             >
                 <SketchPicker color={rgb} onChange={handleChangeColor} />
             </Popover>
+            <WebCamContainer open={displayCamera} cameraVideoRef={cameraVideoRef} cameraCanvasRef={cameraCanvasRef} />
         </React.Fragment>
     );
 };

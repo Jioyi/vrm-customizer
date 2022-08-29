@@ -147,47 +147,50 @@ export default class VRMCustomizer {
         this.setSkintone(defaultValue.skintone);
     };
 
-    public startCameraRender = async (): Promise<void> => {
-        if (this.cameraContext) {
-            return;
+    public cameraRender = async (bool: boolean): Promise<void> => {
+        if (bool) {
+            if (this.holistic) {
+                await this.cameraHolistic.start();
+                return;
+            }
+            this.cameraContext = this.cameraCanvas.getContext('2d');
+            const config: Holistic.HolisticConfig = {
+                locateFile: (file: string) => {
+                    return `https://cdn.jsdelivr.net/npm/electron-mediapipe-holistic@1.0.2/${file}`;
+                }
+            };
+            this.holistic = new Holistic.Holistic(config);
+
+            this.holistic.setOptions({
+                modelComplexity: 1,
+                smoothLandmarks: true,
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.7,
+                refineFaceLandmarks: true
+            });
+
+            this.holistic.onResults((results: Holistic.Results) => {
+                if (!this.cameraHasStarted) {
+                    this.cameraHasStarted = true;
+                    this.cameraCanvas.dispatchEvent(new Event('started'));
+                }
+
+                if (this.cameraContext !== null) {
+                    drawResults(results, this.cameraCanvas, this.cameraContext);
+                    animateVRM(this.currentVrm, results, this.cameraVideo);
+                }
+            });
+
+            this.cameraHolistic = new Camera(this.cameraVideo, {
+                onFrame: async () => {
+                    await this.holistic.send({ image: this.cameraVideo });
+                }
+            });
+
+            await this.cameraHolistic.start();
+        } else {
+            await this.cameraHolistic.stop();
         }
-        this.cameraContext = this.cameraCanvas.getContext('2d');
-
-        const config: Holistic.HolisticConfig = {
-            locateFile: (file: string) => {
-                return `https://cdn.jsdelivr.net/npm/electron-mediapipe-holistic@1.0.2/${file}`;
-            }
-        };
-
-        this.holistic = new Holistic.Holistic(config);
-
-        this.holistic.setOptions({
-            modelComplexity: 1,
-            smoothLandmarks: true,
-            minDetectionConfidence: 0.7,
-            minTrackingConfidence: 0.7,
-            refineFaceLandmarks: true
-        });
-
-        this.holistic.onResults((results: Holistic.Results) => {
-            if (!this.cameraHasStarted) {
-                this.cameraHasStarted = true;
-                this.cameraCanvas.dispatchEvent(new Event('started'));
-            }
-
-            if (this.cameraContext !== null) {
-                drawResults(results, this.cameraCanvas, this.cameraContext);
-                animateVRM(this.currentVrm, results, this.cameraVideo);
-            }
-        });
-
-        this.cameraHolistic = new Camera(this.cameraVideo, {
-            onFrame: async () => {
-                await this.holistic.send({ image: this.cameraVideo });
-            }
-        });
-
-        await this.cameraHolistic.start();
     };
 
     public setBackgroundColor(color: string) {

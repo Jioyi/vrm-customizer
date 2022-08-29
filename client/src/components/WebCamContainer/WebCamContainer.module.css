@@ -1,0 +1,8 @@
+.camera-video {
+    border-radius: 50%;
+    object-fit: cover;
+}
+.camera-canvas {
+    border-radius: 50%;
+    object-fit: cover;
+}
