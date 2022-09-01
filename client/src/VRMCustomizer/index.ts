@@ -59,7 +59,6 @@ export default class VRMCustomizer {
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setClearColor('#000000');
         window.addEventListener('resize', this.onWindowResize, false);
     };
 
@@ -87,7 +86,7 @@ export default class VRMCustomizer {
     };
 
     private buildLights = () => {
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
         directionalLight.position.set(5, 10, 5).normalize();
         directionalLight.target.position.set(0, 0, 0);
         directionalLight.castShadow = true;
@@ -137,18 +136,19 @@ export default class VRMCustomizer {
         const loader = new GLTFLoader();
         loader.crossOrigin = 'anonymous';
 
-        const gltf = await loader.loadAsync('./models/violet2.vrm');
+        const gltf = await loader.loadAsync('./models/B.vrm');
         VRMUtils.removeUnnecessaryJoints(gltf.scene);
         const vrm = await VRM.from(gltf);
         this.scene.add(vrm.scene);
         this.currentVrm = vrm;
         this.currentVrm.scene.rotation.y = Math.PI;
-        this.setHairColor(defaultValue.hairColor);
-        this.setSkintone(defaultValue.skintone);
+        // this.setHairColor(defaultValue.hairColor);
+        // this.setSkintone(defaultValue.skintone);
     };
 
     public cameraRender = async (bool: boolean): Promise<void> => {
         if (bool) {
+
             if (this.holistic) {
                 await this.cameraHolistic.start();
                 return;
