@@ -9,19 +9,57 @@ import { alpha } from '@mui/material';
 import Box from '@mui/material/Box';
 import Popover from '@mui/material/Popover';
 import { useTheme } from '@mui/material/styles';
+import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
+import Button, { ButtonProps } from '@mui/material/Button';
+import CardMedia from '@mui/material/CardMedia';
+
 // Icons
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
-import PlayCircleIcon from '@mui/icons-material/PlayCircle';
-import StopCircleIcon from '@mui/icons-material/StopCircle';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StopIcon from '@mui/icons-material/Stop';
 import GitHubIcon from '@mui/icons-material/GitHub';
 // VRMCustomizer
 import VRMCustomizerState from './../../VRMCustomizer/VRMCustomizerState';
 // Components
 import Tooltip from './../../components/Tooltip';
 import WebCamContainer from '../../components/WebCamContainer';
+
+import { styled } from '@mui/material/styles';
+const styles2 = {
+    paperContainer: {
+        backgroundImage: `url(./assets/bg3.png)`,
+        backgroundSize: 'cover'
+    }
+};
+const BootstrapButton = styled(Button)({
+    boxShadow: 'none',
+    textTransform: 'none',
+    fontSize: 16,
+    padding: '6px 12px',
+    border: '1px solid',
+    lineHeight: 2,
+    backgroundColor: '#BE77F5',
+    borderColor: '#BE77F5',
+    alignContent: 'center',
+    alignItems: 'center',
+    borderRadius: 18,
+    '&:hover': {
+        backgroundColor: '#BE77F5',
+        borderColor: '#BE77F5',
+        boxShadow: 'none'
+    },
+    '&:active': {
+        boxShadow: 'none',
+        backgroundColor: '#BE77F5',
+        borderColor: '#BE77F5'
+    },
+    '&:focus': {
+        boxShadow: '0 0 0 0.2rem rgba(0,123,255,.5)'
+    }
+});
 
 const Customizer = () => {
     const theme = useTheme();
@@ -132,10 +170,16 @@ const Customizer = () => {
         init();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
+    /* 
+                        <IconButton onClick={handleCameraRender} color="inherit" size="large">
+                            <StopCircleIcon sx={{ fontSize: 26 }} />
+                        </IconButton>*/
     return (
         <React.Fragment>
-            <canvas ref={sceneCanvasRef} className={Styles['scene-canvas']} />
+            <Paper style={styles2.paperContainer}>
+                <canvas ref={sceneCanvasRef} className={Styles['scene-canvas']} />
+            </Paper>
+
             <Box
                 sx={{
                     display: 'flex',
@@ -144,52 +188,35 @@ const Customizer = () => {
                     justifyContent: 'center',
                     color: 'text.primary',
                     position: 'absolute',
-                    padding: 1,
+                    paddingBottom: 5,
                     bottom: 0,
-                    bgcolor: alpha(theme.palette.background.default, 0.5)
+                    bgcolor: alpha(theme.palette.background.default, 0)
                 }}
             >
                 <Stack direction="row" alignItems="center" spacing={2}>
-                    <Tooltip title={theme.palette.mode === 'dark' ? 'Activate light mode' : 'Activate dark mode'}>
-                        <IconButton
-                            onClick={() => {
-                                handleChangeBackgroundColor();
-                                colorMode.toggleColorMode();
-                            }}
-                            color="inherit"
+                    {!displayCamera ? (
+                        <BootstrapButton
+                            onClick={handleCameraRender}
+                            variant="contained"
                             size="large"
+                            sx={{ fontSize: 16 }}
+                            startIcon={<PlayArrowIcon sx={{ fontSize: 26 }} />}
+                            disableRipple
                         >
-                            {theme.palette.mode === 'dark' ? <Brightness7Icon sx={{ fontSize: 26 }} /> : <Brightness4Icon sx={{ fontSize: 26 }} />}
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Hair Color" placement="top">
-                        <IconButton onClick={onClickHairColorPicker} color="inherit" size="large">
-                            <FormatColorFillIcon sx={{ fontSize: 26 }} />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Skintone" placement="top">
-                        <IconButton onClick={onClickSkintonePicker} color="inherit" size="large">
-                            <FormatColorFillIcon sx={{ fontSize: 26 }} />
-                        </IconButton>
-                    </Tooltip>
-                    {displayCamera ? (
-                        <Tooltip title="Stop motion capture" placement="top">
-                            <IconButton onClick={handleCameraRender} color="inherit" size="large">
-                                <StopCircleIcon sx={{ fontSize: 26 }} />
-                            </IconButton>
-                        </Tooltip>
+                            Start
+                        </BootstrapButton>
                     ) : (
-                        <Tooltip title="Start motion capture" placement="top">
-                            <IconButton onClick={handleCameraRender} color="inherit" size="large">
-                                <PlayCircleIcon sx={{ fontSize: 26 }} />
-                            </IconButton>
-                        </Tooltip>
+                        <BootstrapButton
+                            onClick={handleCameraRender}
+                            variant="contained"
+                            size="large"
+                            sx={{ fontSize: 16 }}
+                            startIcon={<StopIcon sx={{ fontSize: 26 }} />}
+                            disableRipple
+                        >
+                            Stop
+                        </BootstrapButton>
                     )}
-                    <Tooltip title="GitHub" placement="top">
-                        <IconButton onClick={onClickGitHub} color="inherit" size="large">
-                            <GitHubIcon sx={{ fontSize: 26 }} />
-                        </IconButton>
-                    </Tooltip>
                 </Stack>
             </Box>
             <Popover

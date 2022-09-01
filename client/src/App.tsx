@@ -11,8 +11,7 @@ const App = () => {
         <React.Fragment>
             <ThemeContextProvider>
                 <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/customizer" element={<Customizer />} />
+                    <Route path="/" element={<Customizer />} />
                 </Routes>
             </ThemeContextProvider>
         </React.Fragment>
