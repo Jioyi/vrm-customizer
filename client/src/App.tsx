@@ -5,7 +5,7 @@ import { makeStyles } from '@mui/styles';
 import Customizer from './Views/Customizer';
 import Test from './Views/Test';
 // Components
-import DialogSettings from './Components/DialogSettings';
+import DialogSettings from './Components/DialogSettings/index';
 
 const useStyles = makeStyles(() => ({
     app: {
