@@ -7,7 +7,7 @@
 		"dev": "nodemon",
 		"dev-client": "cd react-app && npm start",
 		"start": "node dist/index.js",
-		"heroku-postbuild": "tsc --project ./ & cd client/ && npm install --legacy-peer-deps && npm install --legacy-peer-deps --only=dev --no-shrinkwrap && npm run build"
+		"heroku-postbuild": "tsc --project ./ & cd client/ && npm install --force && npm install --force --only=dev --no-shrinkwrap && npm run build"
 	},
 	"cacheDirectories": [
 		"node_modules",
