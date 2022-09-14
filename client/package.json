@@ -44,7 +44,7 @@
         "@types/tinycolor2": "^1.4.3"
     },
     "scripts": {
-        "start": "react-scripts start --hot",
+        "start": "react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject"
