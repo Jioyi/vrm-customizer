@@ -1,55 +1,62 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import Stats from 'three/examples/jsm/libs/stats.module';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { VRM, VRMUtils } from '@pixiv/three-vrm';
-import Holistic from '@mediapipe/holistic';
+import { VRM, VRMHumanoidLoaderPlugin, VRMLoaderPlugin, VRMLookAtLoaderPlugin, VRMSpringBoneLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { Camera } from '@mediapipe/camera_utils';
-import { drawResults } from './utils';
-import animateVRM from './animateVRM';
+import Holistic from '@mediapipe/holistic';
+import animateVRM from './animations/animateVRM';
+import FBXloaderMixamoAnimation from './animations/FBXloaderMixamoAnimation';
+import VRMCustomizerHelpersPlugin from './helpers';
+import getScreenshotBlob from './exporters/getScreenshotBlob';
+import VRMExporter from './exporters/VRMExporter';
 
-const defaultValue = {
+const defaultAvatar = {
+    model: './assets/models/demo.vrm',
+    animation: './assets/motions/walking.fbx',
     hairColor: '#4f2b0d',
-    skintone: '#eaeaea'
+    skintone: '#eaeaea',
+    irisColor: '#ff0000'
 };
 
 export default class VRMCustomizer {
     public canvas: HTMLCanvasElement;
-    public cameraCanvas: HTMLCanvasElement;
     public cameraVideo: HTMLVideoElement;
-    public stream!: MediaStream;
 
     public scene: THREE.Scene;
     public renderer!: THREE.WebGLRenderer;
     public camera!: THREE.PerspectiveCamera;
     public orbitControls!: OrbitControls;
-    public previousRAF: number | null = null;
 
     public cameraHasStarted: boolean = false;
     public currentVrm!: VRM;
-    public cameraContext!: CanvasRenderingContext2D | null;
+
     public holistic!: Holistic.Holistic;
     public cameraHolistic!: Camera;
+    public stats: Stats;
 
-    constructor(canvas: HTMLCanvasElement, cameraCanvas: HTMLCanvasElement, cameraVideo: HTMLVideoElement) {
+    public clock: THREE.Clock;
+    public currentMixer!: THREE.AnimationMixer;
+
+    public helpers!: VRMCustomizerHelpersPlugin;
+    public materials!: any;
+
+    public composer!: EffectComposer;
+    public currentUserData: any;
+
+    constructor(canvas: HTMLCanvasElement, cameraVideo: HTMLVideoElement) {
         this.canvas = canvas;
-        this.cameraCanvas = cameraCanvas;
         this.cameraVideo = cameraVideo;
         this.scene = new THREE.Scene();
 
-        this.buildRender();
-        this.buildCamera();
-        this.buildLights();
-
-        this.loadModel();
-
-        this.RAF();
-    }
-
-    private buildRender = () => {
+        // Build Render
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
-            alpha: true,
-            antialias: true
+            antialias: true,
+            preserveDrawingBuffer: true,
+            powerPreference: 'high-performance'
         });
         this.renderer.domElement.id = 'VRMCustomizerCanvas';
         this.renderer.outputEncoding = THREE.sRGBEncoding;
@@ -60,7 +67,26 @@ export default class VRMCustomizer {
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         window.addEventListener('resize', this.onWindowResize, false);
-    };
+
+        this.stats = Stats();
+        this.stats.domElement.style.cssText = 'display:flex;position:absolute;top:0px;left:0px;';
+        document.body.append(this.stats.dom);
+
+        // Build camera
+        this.camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera.position.set(0.0, 1.4, 1);
+
+        this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.orbitControls.screenSpacePanning = true;
+        this.orbitControls.target.set(0.0, 1.4, 0.0);
+        this.orbitControls.update();
+
+        this.buildLights();
+        this.loadDefaultModel();
+        this.onWindowResize();
+        this.clock = new THREE.Clock();
+        this.RAF();
+    }
 
     private onWindowResize = () => {
         this.camera.aspect = window.innerWidth / window.innerHeight;
@@ -68,21 +94,10 @@ export default class VRMCustomizer {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     };
 
-    private buildCamera = () => {
-        const fov = 35;
-        const aspect = window.innerWidth / window.innerHeight;
-        const near = 0.1;
-        const far = 1000;
-
-        this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-        this.camera.position.set(0.0, 1.4, 1);
-
-        this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.orbitControls.screenSpacePanning = true;
-        this.orbitControls.target.set(0.0, 1.4, 0.0);
-        this.orbitControls.minDistance = 0.5;
-        this.orbitControls.maxDistance = 10;
-        this.orbitControls.update();
+    public lockCamera = (bool: boolean) => {
+        if (this.orbitControls) {
+            this.orbitControls.enabled = !bool;
+        }
     };
 
     private buildLights = () => {
@@ -113,78 +128,161 @@ export default class VRMCustomizer {
         this.scene.add(ambientLight);
     };
 
-    private update = (timeElapsed: number) => {
+    private update = (deltaTime: number) => {
+        this.stats.update();
         if (this.currentVrm) {
-            this.currentVrm.update(timeElapsed);
+            this.currentVrm.update(deltaTime);
+        }
+        if (this.currentMixer) {
+            this.currentMixer.update(deltaTime);
         }
     };
 
-    private RAF() {
-        requestAnimationFrame((t) => {
-            if (this.previousRAF == null) {
-                this.previousRAF = t;
-            }
-
-            this.update((t - this.previousRAF) * 0.001);
+    public RAF() {
+        const deltaTime = this.clock.getDelta();
+        this.update(deltaTime);
+        if (this.composer) {
+            this.composer.render();
+        } else {
             this.renderer.render(this.scene, this.camera);
-            this.previousRAF = t;
-            this.RAF();
-        });
+        }
+        requestAnimationFrame(() => this.RAF());
     }
 
-    private loadModel = async () => {
-        const loader = new GLTFLoader();
-        loader.crossOrigin = 'anonymous';
+    private loadDefaultModel = async () => {
+        this.helpers = new VRMCustomizerHelpersPlugin(this);
+        // loader
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('./draco/');
 
-        const gltf = await loader.loadAsync('./models/B.vrm');
+        const loader = new GLTFLoader();
+        //loader.setDRACOLoader(dracoLoader);
+        loader.crossOrigin = 'anonymous';
+        loader.register((parser: any) => {
+            /*console.log('parser', parser);
+            return new VRMLoaderPlugin(parser);*/
+            return new VRMLoaderPlugin(parser, {
+                humanoidPlugin: new VRMHumanoidLoaderPlugin(parser, {
+                    helperRoot: this.helpers.humanoidHelperRoot
+                }),
+                lookAtPlugin: new VRMLookAtLoaderPlugin(parser, {
+                    helperRoot: this.helpers.lookAtHelperRoot
+                }),
+                springBonePlugin: new VRMSpringBoneLoaderPlugin(parser, {
+                    jointHelperRoot: this.helpers.springBoneJointHelperRoot,
+                    colliderHelperRoot: this.helpers.springBoneColliderHelperRoot
+                })
+            });
+        });
+
+        const gltf = await loader.loadAsync(defaultAvatar.model);
+        this.currentUserData = gltf.userData;
+        VRMUtils.removeUnnecessaryVertices(gltf.scene);
         VRMUtils.removeUnnecessaryJoints(gltf.scene);
-        const vrm = await VRM.from(gltf);
+        const { vrm } = gltf.userData;
+        VRMUtils.rotateVRM0(vrm);
         this.scene.add(vrm.scene);
         this.currentVrm = vrm;
-        this.currentVrm.scene.rotation.y = Math.PI;
-        // this.setHairColor(defaultValue.hairColor);
-        // this.setSkintone(defaultValue.skintone);
+        this.currentMixer = new THREE.AnimationMixer(vrm.humanoid.normalizedHumanBonesRoot);
+        this.currentMixer.timeScale = 1;
+
+        this.helpers.humanoidHelperRoot.visible = false;
+        this.helpers.lookAtHelperRoot.visible = false;
+        this.helpers.springBoneJointHelperRoot.visible = false;
+        this.helpers.springBoneColliderHelperRoot.visible = false;
+
+        this.materials = vrm.materials;
+        // vrm.humanoid.resetNormalizedPose();
+
+        /* */
+
+        this.setHairColor(defaultAvatar.hairColor);
+        this.setIrisColor(defaultAvatar.irisColor);
+        this.setBrowColor(defaultAvatar.hairColor);
+        // this.setSkintone(defaultAvatar.skintone);
+    };
+
+    public loadMixamoAnimation = async () => {
+        const clip = await FBXloaderMixamoAnimation(this.currentVrm, defaultAvatar.animation);
+        if (clip) {
+            const action = this.currentMixer.clipAction(clip);
+            action.play();
+        }
+    };
+
+    public downloadVRMModel = async () => {
+        const exporter = new VRMExporter();
+        exporter.parse(this.currentVrm, this.currentUserData, (vrm: ArrayBuffer) => {
+            const link = document.createElement('a');
+            link.style.display = 'none';
+            link.href = URL.createObjectURL(new Blob([vrm], { type: 'octet/stream' }));
+            link.download = 'model.vrm';
+            link.click();
+        });
+    };
+
+    public takeHumanoidHelper = () => {
+        if (this.helpers) this.helpers.humanoidHelperRoot.visible = !this.helpers.humanoidHelperRoot.visible;
+    };
+
+    public takeLookAtHelper = () => {
+        if (this.helpers) this.helpers.lookAtHelperRoot.visible = !this.helpers.lookAtHelperRoot.visible;
+    };
+
+    public takeSpringBoneJointHelper = () => {
+        if (this.helpers) this.helpers.springBoneJointHelperRoot.visible = !this.helpers.springBoneJointHelperRoot.visible;
+    };
+
+    public takeSpringBoneColliderHelper = () => {
+        if (this.helpers) this.helpers.springBoneColliderHelperRoot.visible = !this.helpers.springBoneColliderHelperRoot.visible;
+    };
+
+    public takeScreenshot = async () => {
+        const blob = await getScreenshotBlob(this.canvas);
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(new Blob([blob], { type: 'image/json' }));
+        link.download = 'screenshot.jpg';
+        link.click();
+        //this.downloadVRMModel();
     };
 
     public cameraRender = async (bool: boolean): Promise<void> => {
         if (bool) {
-
             if (this.holistic) {
                 await this.cameraHolistic.start();
                 return;
             }
-            this.cameraContext = this.cameraCanvas.getContext('2d');
             const config: Holistic.HolisticConfig = {
                 locateFile: (file: string) => {
-                    return `https://cdn.jsdelivr.net/npm/electron-mediapipe-holistic@1.0.2/${file}`;
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/holistic@${Holistic.VERSION}/${file}`;
+                    //return `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`;
+                    //return `https://cdn.jsdelivr.net/npm/electron-mediapipe-holistic@1.0.2/${file}`;
                 }
             };
+
             this.holistic = new Holistic.Holistic(config);
 
             this.holistic.setOptions({
                 modelComplexity: 1,
                 smoothLandmarks: true,
-                minDetectionConfidence: 0.7,
-                minTrackingConfidence: 0.7,
+                minDetectionConfidence: 0.5, //0.7
+                minTrackingConfidence: 0.5, //0.7
                 refineFaceLandmarks: true
             });
 
             this.holistic.onResults((results: Holistic.Results) => {
                 if (!this.cameraHasStarted) {
                     this.cameraHasStarted = true;
-                    this.cameraCanvas.dispatchEvent(new Event('started'));
                 }
-
-                if (this.cameraContext !== null) {
-                    drawResults(results, this.cameraCanvas, this.cameraContext);
-                    animateVRM(this.currentVrm, results, this.cameraVideo);
-                }
+                animateVRM(this.currentVrm, results, this.cameraVideo);
             });
 
             this.cameraHolistic = new Camera(this.cameraVideo, {
                 onFrame: async () => {
                     await this.holistic.send({ image: this.cameraVideo });
-                }
+                },
+                width: 480,
+                height: 480
             });
 
             await this.cameraHolistic.start();
@@ -197,39 +295,43 @@ export default class VRMCustomizer {
         this.renderer.setClearColor(color);
     }
 
-    public setHairColor(color: string) {
-        this.scene.traverse(async (child: any) => {
-            if (child.material instanceof Array) {
-                child.material.forEach((mat: any) => {
-                    if (mat.name.includes('MAT_HAIR')) {
-                        mat.uniforms.color.value.set(color);
-                        mat.uniforms.shadeColor.value.set(color);
-                        mat.uniformsNeedUpdate = true;
-                    }
-                });
+    public setSkintone(color: string) {
+        this.materials.forEach((mat: any) => {
+            if (mat.name.includes('MAT_FACE_SKIN') || mat.name.includes('MAT_BODY_SKIN')) {
+                mat.color.set(color);
+                mat.uniforms.shadeColorFactor.value.set(color);
+                mat.uniformsNeedUpdate = true;
             }
         });
     }
 
-    public setSkintone(color: string) {
-        this.scene.traverse(async (child: any) => {
-            if (child.material instanceof Array) {
-                child.material.forEach((mat: any) => {
-                    if (mat.name.includes('MAT_FACE_SKIN') || mat.name.includes('MAT_BODY_SKIN')) {
-                        mat.uniforms.color.value.set(color);
-                        mat.uniforms.shadeColor.value.set(color);
-                        mat.uniformsNeedUpdate = true;
-                    }
-                });
+    public setHairColor(color: string) {
+        this.materials.forEach((mat: any) => {
+            if (mat.name.includes('MAT_HAIR')) {
+                mat.color.set(color);
+                mat.uniforms.shadeColorFactor.value.set(color);
+                mat.uniformsNeedUpdate = true;
+            }
+        });
+    }
+
+    public setBrowColor(color: string) {
+        this.materials.forEach((mat: any) => {
+            if (mat.name.includes('MAT_FACE_BROW')) {
+                mat.color.set(color);
+                mat.uniforms.shadeColorFactor.value.set(color);
+                mat.uniformsNeedUpdate = true;
+            }
+        });
+    }
+
+    public setIrisColor(color: string) {
+        this.materials.forEach((mat: any) => {
+            if (mat.name.includes('MAT_EYE_IRIS')) {
+                mat.color.set(color);
+                mat.uniforms.shadeColorFactor.value.set(color);
+                mat.uniformsNeedUpdate = true;
             }
         });
     }
 }
-
-//mat.color.setHex(0x000000);
-//console.log(mat.uniforms);
-//mat.uniforms.glowColor.value.set( 0x00ff00 );
-//mat.uniforms.diffuse.value.setHex ( 0xFF0000 );
-// mat.uniforms.diffuse.value.setHex(0xff0000);
-// mat.color.set(color);
-// mat.needsUpdate = true;

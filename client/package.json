@@ -1,60 +1,70 @@
 {
-  "name": "client",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@emotion/react": "^11.10.0",
-    "@emotion/styled": "^11.10.0",
-    "@mediapipe/camera_utils": "^0.3.1640029074",
-    "@mediapipe/drawing_utils": "^0.3.1620248257",
-    "@mediapipe/holistic": "^0.5.1635989137",
-    "@mui/icons-material": "^5.10.2",
-    "@mui/material": "^5.10.2",
-    "@pixiv/three-vrm": "^0.6.11",
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.3.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.11.56",
-    "@types/react": "^18.0.17",
-    "@types/react-color": "^3.0.4",
-    "@types/react-dom": "^18.0.6",
-    "kalidokit": "^1.1.5",
-    "react": "^18.2.0",
-    "react-color": "^2.19.3",
-    "react-dom": "^18.2.0",
-    "react-draggable": "^4.4.5",
-    "react-router-dom": "^6.3.0",
-    "react-scripts": "5.0.1",
-    "three": "^0.137.0",
-    "typescript": "^4.8.2",
-    "web-vitals": "^2.1.4"
-  },
-  "devDependencies": {
-    "@types/three": "^0.137.0"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
+    "name": "client",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+        "@emotion/react": "^11.10.4",
+        "@emotion/styled": "^11.10.4",
+        "@mediapipe/camera_utils": "^0.3.1640029074",
+        "@mediapipe/drawing_utils": "^0.3.1620248257",
+        "@mediapipe/face_mesh": "^0.4.1633559619",
+        "@mediapipe/holistic": "^0.5.1635989137",
+        "@mediapipe/pose": "^0.5.1635988162",
+        "@mui/icons-material": "^5.10.3",
+        "@mui/material": "^5.10.3",
+        "@mui/styles": "^5.10.3",
+        "@testing-library/jest-dom": "^5.16.5",
+        "@testing-library/react": "^13.3.0",
+        "@testing-library/user-event": "^13.5.0",
+        "@types/jest": "^27.5.2",
+        "@types/node": "^16.11.56",
+        "@types/offscreencanvas": "^2019.7.0",
+        "@types/react": "^18.0.17",
+        "@types/react-color": "^3.0.4",
+        "@types/react-dom": "^18.0.6",
+        "buffer": "^6.0.3",
+        "html2canvas": "^1.4.1",
+        "kalidokit": "^1.1.5",
+        "react": "^18.2.0",
+        "react-color": "^2.19.3",
+        "react-dom": "^18.2.0",
+        "react-draggable": "^4.4.5",
+        "react-router-dom": "^6.3.0",
+        "react-scripts": "5.0.1",
+        "three": "0.140.2",
+        "tinycolor2": "^1.4.2",
+        "typescript": "^4.8.2",
+        "web-vitals": "^2.1.4"
+    },
+    "devDependencies": {
+        "@pixiv/three-vrm": "1.0.0-beta.19",
+        "@pixiv/types-vrm-0.0": "^1.0.0-beta.19-alpha.0",
+        "@pixiv/types-vrmc-vrm-1.0": "^1.0.0-beta.19-alpha.0",
+        "@types/three": "^0.140.0",
+        "@types/tinycolor2": "^1.4.3"
+    },
+    "scripts": {
+        "start": "react-scripts start --hot",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject"
+    },
+    "eslintConfig": {
+        "extends": [
+            "react-app",
+            "react-app/jest"
+        ]
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    }
 }
