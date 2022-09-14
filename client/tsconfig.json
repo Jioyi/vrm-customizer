@@ -1,15 +1,12 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "target": "es5",
-    "outDir": "build",
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
     ],
     "allowJs": true,
-    "sourceMap": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -21,14 +18,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
-    "paths": {
-      "@Components/*": [
-        "src/Components/*"
-      ]
-    }
+    "jsx": "react-jsx"
   },
   "include": [
-    "src/*"
+    "src"
   ]
 }
