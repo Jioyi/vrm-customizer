@@ -4,6 +4,8 @@ import { makeStyles } from '@mui/styles';
 // Views
 import Customizer from './Views/Customizer';
 import Test from './Views/Test';
+// Components
+import DialogSettings from './Components/DialogSettings';
 
 const useStyles = makeStyles(() => ({
     app: {
@@ -28,6 +30,7 @@ const App = () => {
                     <Route path="/demo" element={<Test />} />
                 </Routes>
             </Router>
+            <DialogSettings />
         </div>
     );
 };
